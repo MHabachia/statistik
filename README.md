@@ -1,6 +1,6 @@
 # Statistik (SL/PCÜ)
 
-***** Repository für Statistik Aufgaben im SoSe 2026 *****
+* Repository für Statistik Aufgaben im SoSe 2026 *
 
 Dieses Repository dient zur Speicherung und Versionierung der Wöchentliche Abgaben für das 3.Semester des Studiengangs Wirtschaftsinformatik, Kurs „B3.5 Statistik“.
 
