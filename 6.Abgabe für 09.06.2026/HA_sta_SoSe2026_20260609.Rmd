@@ -1,0 +1,855 @@
+---
+title: "Semesterbegleitende Abgabe SoSe2026"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Statistik im Bachelor Wirtschaftsinformatik
+Dozent_innen: Martin Spott, Michael Heimann, Anja Hirsch   
+Stand: `r format(Sys.Date(), format='%d.%m.%Y')`
+
+<!-- Bitte geben Sie Ihre Gruppennummer und Ihre Namen an -->
+
+**Gruppe:**
+
+[Gruppe_Z1G1_H]
+
+**Autor_innen:**
+
+[ Alnabulsi, Mohamad Anas ]  
+[ Habachia, Mohamad ]  
+[ Orabe, Abdalkarem ]  
+[ Ibrahim, Hassan ]
+
+
+## Einleitung
+
+In diesem Semester beschäftigen wir uns mit Kraftstoffpreisen in Berlin. Dazu benutzen wir Daten von der Organisation Tankerkönig [1], die jede Preisänderung angeschlossener Tankstellenbetreiber_innen mit Zeitstempel protokolliert. In der Datei *tankerkoenigSoSe2026.csv* finden Sie den Ausschnitt der Daten, den Sie für die Aufgaben benutzen sollen. Dabei haben wir für jede Tankstelle und jede Stunde den Median der von Tankerkönig registrierten Preisänderungen der Kraftstoffe Diesel und E10 ermittelt.
+
+### Regeln
+
+Arbeiten Sie in Ihrer Moodlegruppe von bis zu vier Studierenden, die alle in derselben Übungsgruppe sein und die eine zu wählende Abgabe auch in den zugehörigen Übungen vorstellen müssen (Terminkalender folgt). Jede/r von Ihnen hat in Moodle nur Zugriff auf die Gruppeneinteilung Ihrer in LSF festgelegten Übungsgruppe, wo Sie sich in einer Gruppe eintragen müssen, um Punkte zu bekommen.   
+
+Bearbeiten Sie die Aufgaben fortlaufend in diesem RMarkdown-Dokument und geben es bei jeder Teilabgabe komplett als RMarkdown- und als mit Knit übersetztes HTML-Dokument ab. Stellen Sie sicher, dass das RMarkdown-Dokument auch für uns lauffähig ist. Gehen Sie dazu davon aus, dass sich auf unseren Rechnern die Daten im selben Verzeichnis befinden werden wie Ihr RMarkdown-Dokument. 
+
+Benutzen Sie nur Verfahren und Techniken, die wir in der Vorlesung besprochen haben. Sie können aber gerne komplexere Visualisierungen einsetzen, wenn dies sinnvoll erscheint. 
+
+Erklären Sie kurz Ihr Vorgehen vor jedem Codeabschnitt und interpretieren die Ergebnisse danach. Schreiben Sie Erklärungen/Interpretationen in Textform zwischen die Codeblöcke, nicht als Kommentare in die Codeblöcke. Sie können den Code aber gerne zusätzlich knapp kommentieren.   
+
+Für jede weitere Woche bekommen Sie eine Aufgabenstellung in RMarkdown, die Sie bitte in diesem Dokument fortlaufend anhängen und dort bearbeiten. Geben Sie immer das gesamte Dokument einschließlich der vorangehenden Aufgaben ab, da die Aufgaben teilweise aufeinander aufbauen und Sie vorangehende Lösungen später benötigen. 
+
+## Woche 1 -- 05.05.2026
+
+Beschreiben Sie zwischen den Codeblöcken in Textform, was Sie warum tun und was Sie herausfinden.
+
+**a. Importieren Sie die Daten.**
+
+Zunächst laden wir den Tankerkönig-Datensatz in R. Da es sich um deutsche Daten handelt, verwenden wir `read.csv2()`, da hier Werte häufig mit Semikolon getrennt sind. Anschließend betrachten wir die Struktur der Daten mit `str()`.
+```{r aufgabe_1a}
+# WICHTIG: Die Datei tankerkoenigSoSe2026.csv muss im selben Ordner liegen!
+tankerkoenig <- read.csv("tankerkoenigSoSe2026.csv")
+
+# Einen ersten Überblick über die Datenstruktur verschaffen
+str(tankerkoenig)
+```
+
+**b. Beschreiben Sie die Daten. Was sind die Merkmale, was die Merkmalsträger?**
+
+Merkmalsträger (Untersuchungseinheit): Ein einzelner Merkmalsträger ist hier eine spezifische Tankstelle in einer ganz bestimmten Stunde. Jeder Zeile im Datensatz (jede Beobachtung) entspricht genau einer solchen Kombination aus Tankstelle und Stunde.
+
+Merkmale (Variablen): Die Merkmale sind die für diese Träger erfassten Eigenschaften. Dazu gehören laut Einleitung die Tankstelle (z.B. ID), die Zeit (Stunde), die Marke der Tankstelle (`brand`) sowie der jeweilige Median-Preis für Diesel und E10.
+
+**c. Geben Sie für alle Merkmale an, ob sie qualitativ/quantitativ, diskret/stetig und auf welchen Skalen sie definiert sind.**
+
+Aus der Beschreibung des Datensatzes lassen sich folgende Einstufungen ableiten:
+1. Tankstellen-Identifikator: Qualitativ, nominalskaliert.
+2. Marke (`brand`): Qualitativ, nominalskaliert (Kategorien ohne natürliche Rangfolge).
+3. Stunde (Zeitstempel): Quantitativ, intervallskaliert (oder verhältnisskaliert, wenn als Dauer seit einem Nullpunkt gemessen). Wird hier als diskret behandelt, da es sich um volle Stunden handelt.
+4. Preise (Diesel & E10): Quantitativ, stetig, verhältnisskaliert (sie können jeden beliebigen Zwischenwert annehmen und haben einen absoluten Nullpunkt bei 0 Euro).
+
+**d. Berechnen Sie für das Merkmal `brand` (Marke) die Tabellen mit absoluter und relativer Häufigkeit.**
+
+Wir verwenden die Funktionen `table()` für die absoluten Zahlen und `prop.table()` für die relativen Anteile. Um das Ergebnis lesbar darzustellen, fassen wir es in einem Data Frame zusammen.
+```{r aufgabe_1d}
+# Absolute Häufigkeiten berechnen
+abs_freq_brand <- table(tankerkoenig$brand)
+
+# Relative Häufigkeiten berechnen
+rel_freq_brand <- prop.table(abs_freq_brand)
+
+# Tabelle zusammenbauen und runden
+brand_tabelle <- data.frame(
+  Marke = names(abs_freq_brand),
+  Absolute_Haeufigkeit = as.numeric(abs_freq_brand),
+  Relative_Haeufigkeit = round(as.numeric(rel_freq_brand), 4)
+)
+
+# Ausgabe der fertigen Tabelle
+brand_tabelle
+```
+
+**e. Stellen Sie die Tabelle absoluter Häufigkeit von `brand` als Balkendiagramm dar. Beschriften Sie alle Axen und geben dem Diagramm eine Überschrift.**
+
+Wir nutzen die Funktion `barplot()`. Mit dem Argument `las = 2` stellen wir sicher, dass die Namen der Marken senkrecht geschrieben werden, falls es viele Marken gibt und der Platz sonst nicht reicht.
+
+```{r aufgabe_1e}
+# Balkendiagramm zeichnen
+barplot(abs_freq_brand,
+        main = "Anzahl der Meldungen pro Tankstellenmarke",
+        xlab = "Marke",
+        ylab = "Absolute Häufigkeit (Stunden-Meldungen)",
+        col = "steelblue",
+        las = 2,           # Dreht die Beschriftung der x-Achse um 90 Grad
+        cex.names = 0.8)   # Macht die Schrift der Achse etwas kleiner
+```
+
+**f. Was bedeuten die absoluten Häufigkeiten im Kontext unserer Daten? Warum gibt es Unterschiede zwischen den Werten der verschiedenen Marken?**
+
+Die absoluten Häufigkeiten geben nicht nur die reine Anzahl der Tankstellen pro Marke an. Da unsere Merkmalsträger eine Kombination aus "Tankstelle" und "Stunde" sind, zeigt die absolute Häufigkeit, wie viele stündliche Preismeldungen insgesamt von einer bestimmten Marke im Datensatz vorliegen. 
+
+**Unterschiede zwischen den Marken** kommen hauptsächlich durch zwei Dinge zustande:
+1. Unterschiedliche Marktanteile: Große Anbieter (wie Aral oder Shell) haben deutlich mehr Tankstellen in Berlin als kleinere Anbieter. Mehr Tankstellen produzieren pro Stunde auch mehr Datensätze.
+
+2. Öffnungszeiten und Verfügbarkeit: Wenn Tankstellen nachts geschlossen sind oder ihre Preise nicht durchgehend übermitteln, fehlen für diese Stunden die Meldungen. Marken mit vielen 24/7-Tankstellen generieren also verhältnismäßig mehr Datensätze.
+
+## Woche 2 -- 12.05.2026
+
+**a. Bestimmen Sie, wie viele Werte bei jedem Merkmal im Datensatz fehlen (NA). Finden Sie mit etwas Detektivarbeit heraus, welche Eigenschaft die Datensätze mit den fehlenden Werten haben und wie man die fehlenden mit sinnvollen Werten ersetzen kann. Das Ersetzen müssen Sie nur erklären, nicht implementieren.**
+
+Zuerst zählen wir für jedes Merkmal, wie viele Einträge fehlen. Dafür verwenden wir `is.na()` für jede Spalte und summieren die TRUE-Werte.
+
+```{r aufgabe_2a_na_zaehlen}
+fehlende_werte <- colSums(is.na(tankerkoenig))
+
+data.frame(
+  Merkmal = names(fehlende_werte),
+  Fehlende_Werte = as.numeric(fehlende_werte)
+)
+```
+
+Die fehlenden Werte treten nur bei `house_number` und `e10_median` auf. Um die Ursache genauer zu verstehen, betrachten wir die betroffenen Tankstellen.
+
+```{r aufgabe_2a_detektivarbeit}
+# Tankstellen mit fehlender Hausnummer
+unique(tankerkoenig[is.na(tankerkoenig$house_number),
+                    c("id", "name", "brand", "street", "post_code")])
+
+# Tankstelle(n) mit fehlendem E10-Preis
+unique(tankerkoenig[is.na(tankerkoenig$e10_median),
+                    c("id", "name", "brand", "street",
+                      "house_number", "post_code")])
+
+# Zeitraum der fehlenden E10-Werte
+range(tankerkoenig$date[is.na(tankerkoenig$e10_median)])
+```
+
+Bei `house_number` sieht man, dass die Hausnummer nicht wirklich unbekannt ist. Sie steht bei diesen Datensätzen bereits im Merkmal `street`, zum Beispiel in Einträgen wie `Steglitzer Damm 77`, `Königin-Luise-Straße 22a` oder `Prenzlauer Promenade 72-73`. Sinnvoll wäre deshalb, die Hausnummer aus dem Ende des Straßennamens zu übernehmen und das Merkmal `street` danach auf den reinen Straßennamen zu kürzen.
+
+Die fehlenden Werte bei `e10_median` gehören alle zu einer einzelnen Shell-Tankstelle: `Shell Berlin Heerstr. 326-328`. Der Zeitraum reicht vom 07.08.2025 bis zum 30.09.2025. Für diese Zeilen ist `diesel_median` vorhanden, nur der E10-Wert fehlt. Sinnvoll wäre hier eine Schätzung aus den vorhandenen Daten derselben Tankstelle, zum Beispiel indem man für diese Tankstelle die typische Differenz `e10_median - diesel_median` in den übrigen Zeitpunkten berechnet und diese Differenz auf die vorhandenen Dieselpreise addiert. Noch genauer wäre eine Differenz nach Uhrzeit, weil Kraftstoffpreise im Tagesverlauf schwanken.
+
+**b. Erstellen Sie Histogramme für die Merkmale `e10_median` und `diesel_median` und zeichnen jeweils das arithmetische Mittel und den Median ein.**
+
+Für die Histogramme entfernen wir fehlende E10-Werte mit `na.omit()`. Die Preise sind im Datensatz als ganze Zahlen gespeichert, zum Beispiel 1769 für 1,769 Euro. Für die Lagewerte spielt diese Skalierung keine Rolle, die Achsenbeschriftung weist aber auf diese Einheit hin.
+
+```{r aufgabe_2b_hist_e10}
+e10_werte <- na.omit(tankerkoenig$e10_median)
+e10_mittel <- mean(e10_werte)
+e10_median <- median(e10_werte)
+
+hist(e10_werte,
+     main = "Histogramm der E10-Preise",
+     xlab = "E10-Medianpreis in Tausendstel Euro",
+     ylab = "Häufigkeit",
+     col = "lightblue",
+     border = "white")
+
+abline(v = e10_mittel, col = "red", lwd = 2)
+abline(v = e10_median, col = "darkgreen", lwd = 2, lty = 2)
+legend("topright",
+       legend = c("Arithmetisches Mittel", "Median"),
+       col = c("red", "darkgreen"),
+       lwd = 2,
+       lty = c(1, 2))
+```
+
+Beim E10-Preis liegt das arithmetische Mittel etwas oberhalb des Medians. Das deutet darauf hin, dass einige höhere Preise den Durchschnitt nach oben ziehen.
+
+```{r aufgabe_2b_hist_diesel}
+diesel_werte <- tankerkoenig$diesel_median
+diesel_mittel <- mean(diesel_werte)
+diesel_median_wert <- median(diesel_werte)
+
+hist(diesel_werte,
+     main = "Histogramm der Dieselpreise",
+     xlab = "Diesel-Medianpreis in Tausendstel Euro",
+     ylab = "Häufigkeit",
+     col = "lightgray",
+     border = "white")
+
+abline(v = diesel_mittel, col = "red", lwd = 2)
+abline(v = diesel_median_wert, col = "darkgreen", lwd = 2, lty = 2)
+legend("topright",
+       legend = c("Arithmetisches Mittel", "Median"),
+       col = c("red", "darkgreen"),
+       lwd = 2,
+       lty = c(1, 2))
+```
+
+Beim Dieselpreis liegen arithmetisches Mittel und Median sehr nah beieinander. Die Verteilung ist dadurch im Zentrum ungefähr ausgeglichen.
+
+**c. Finden Sie heraus, wie man zwei Histogramme zum besseren Vergleich in einem Diagramm überlagern kann. Dazu können Sie auch Bibliotheken wie ggplot2 und plotly betrachten.**
+
+Zwei Histogramme kann man überlagern, indem man für beide Merkmale dieselben Klassengrenzen verwendet und halbtransparente Farben setzt. Dadurch bleiben die Bereiche sichtbar, in denen sich die Verteilungen überschneiden.
+
+```{r aufgabe_2c_hist_ueberlagert}
+gemeinsame_grenzen <- seq(
+  floor(min(c(e10_werte, diesel_werte), na.rm = TRUE) / 10) * 10,
+  ceiling(max(c(e10_werte, diesel_werte), na.rm = TRUE) / 10) * 10,
+  by = 10
+)
+
+hist(e10_werte,
+     breaks = gemeinsame_grenzen,
+     col = rgb(0.1, 0.4, 0.8, 0.45),
+     border = "white",
+     main = "Überlagerte Histogramme von E10 und Diesel",
+     xlab = "Medianpreis in Tausendstel Euro",
+     ylab = "Häufigkeit")
+
+hist(diesel_werte,
+     breaks = gemeinsame_grenzen,
+     col = rgb(0.9, 0.4, 0.1, 0.45),
+     border = "white",
+     add = TRUE)
+
+abline(v = e10_mittel, col = "blue", lwd = 2)
+abline(v = diesel_mittel, col = "darkorange", lwd = 2)
+
+legend("topright",
+       legend = c("E10", "Diesel", "Mittelwert E10", "Mittelwert Diesel"),
+       fill = c(rgb(0.1, 0.4, 0.8, 0.45),
+                rgb(0.9, 0.4, 0.1, 0.45),
+                NA,
+                NA),
+       border = c("white", "white", NA, NA),
+       col = c(NA, NA, "blue", "darkorange"),
+       lwd = c(NA, NA, 2, 2))
+```
+
+Im überlagerten Histogramm erkennt man, dass die E10-Preise insgesamt etwas höher liegen als die Dieselpreise. Die beiden Verteilungen überschneiden sich aber stark, weil beide Kraftstoffarten ähnlichen Markt- und Tagespreisschwankungen unterliegen.
+
+## Woche 3 -- 19.05.2026
+
+**a. Bestimmen Sie Fünf- oder Sechs-Punkte-Zusammenfassungen der Merkmale `e10_median` und `diesel_median` und erstellen zugehörige Boxplots mit Ausreißererkennung. Beschreiben Sie anhand dessen die Unterschiede zwischen den Werteverteilungen der Merkmale.**
+
+Zuerst bestimmen wir für beide Kraftstoffarten die Sechs-Punkte-Zusammenfassung mit Minimum, erstem Quartil, Median, arithmetischem Mittel, drittem Quartil und Maximum. Fehlende Werte bei `e10_median` werden dabei entfernt.
+
+```{r aufgabe_3a_zusammenfassung}
+e10_werte <- na.omit(tankerkoenig$e10_median)
+diesel_werte <- na.omit(tankerkoenig$diesel_median)
+
+zusammenfassung_preise <- data.frame(
+  Merkmal = c("E10", "Diesel"),
+  Minimum = c(min(e10_werte), min(diesel_werte)),
+  Q1 = c(quantile(e10_werte, 0.25), quantile(diesel_werte, 0.25)),
+  Median = c(median(e10_werte), median(diesel_werte)),
+  Mittelwert = c(mean(e10_werte), mean(diesel_werte)),
+  Q3 = c(quantile(e10_werte, 0.75), quantile(diesel_werte, 0.75)),
+  Maximum = c(max(e10_werte), max(diesel_werte))
+)
+
+zusammenfassung_preise
+```
+
+Für die Boxplots verwenden wir die übliche 1,5-IQR-Regel. Werte außerhalb der Antennen werden im Boxplot als Ausreißer dargestellt.
+
+```{r aufgabe_3a_boxplots}
+boxplot(e10_werte, diesel_werte,
+        names = c("E10", "Diesel"),
+        main = "Boxplots der Medianpreise von E10 und Diesel",
+        ylab = "Medianpreis in Tausendstel Euro",
+        col = c("lightblue", "lightgray"))
+```
+
+Die mittleren 50 % der E10-Werte liegen zwischen 1609 und 1689, bei Diesel zwischen 1574 und 1659. E10 liegt damit im Zentrum der Verteilung etwas höher als Diesel. Der Median beträgt bei E10 1639 und bei Diesel 1619. Beide Verteilungen haben Ausreißer nach unten und oben. Besonders auffällig ist bei Diesel das Minimum 0, denn ein Dieselpreis von 0 ist fachlich kein realistischer Kraftstoffpreis. Bei E10 ist das Maximum 2669 ebenfalls extrem hoch gegenüber dem normalen Wertebereich.
+
+**b. Extrahieren Sie die Ausreißer von `e10_median` und `diesel_median`. Finden Sie mit Detektivarbeit heraus, ob es ein Muster für die Ausreißer gibt, z.B. wann sie wo auftreten, und ob die Ausreißer echte oder falsche Werte sind.**
+
+Wir berechnen zunächst die unteren und oberen Ausreißergrenzen nach der 1,5-IQR-Regel und filtern anschließend alle betroffenen Datensätze heraus.
+
+```{r aufgabe_3b_ausreisser_extrahieren}
+ausreisser_grenzen <- function(x) {
+  x <- x[!is.na(x)]
+  q1 <- quantile(x, 0.25)
+  q3 <- quantile(x, 0.75)
+  iqr <- IQR(x)
+  c(unten = q1 - 1.5 * iqr,
+    oben = q3 + 1.5 * iqr)
+}
+
+grenzen_e10 <- ausreisser_grenzen(tankerkoenig$e10_median)
+grenzen_diesel <- ausreisser_grenzen(tankerkoenig$diesel_median)
+
+ausreisser_e10 <- tankerkoenig[
+  !is.na(tankerkoenig$e10_median) &
+    (tankerkoenig$e10_median < grenzen_e10["unten"] |
+       tankerkoenig$e10_median > grenzen_e10["oben"]),
+]
+
+ausreisser_diesel <- tankerkoenig[
+  !is.na(tankerkoenig$diesel_median) &
+    (tankerkoenig$diesel_median < grenzen_diesel["unten"] |
+       tankerkoenig$diesel_median > grenzen_diesel["oben"]),
+]
+
+data.frame(
+  Merkmal = c("E10", "Diesel"),
+  Untere_Grenze = c(grenzen_e10["unten"], grenzen_diesel["unten"]),
+  Obere_Grenze = c(grenzen_e10["oben"], grenzen_diesel["oben"]),
+  Anzahl_Ausreisser = c(nrow(ausreisser_e10), nrow(ausreisser_diesel))
+)
+```
+
+Um Muster zu finden, betrachten wir die Ausreißer nach Monat, Uhrzeit und Marke. Außerdem lassen wir uns die extremsten Beobachtungen anzeigen.
+
+```{r aufgabe_3b_muster}
+# Monate mit den meisten Ausreißern
+sort(table(substr(ausreisser_e10$date, 1, 7)), decreasing = TRUE)[1:6]
+sort(table(substr(ausreisser_diesel$date, 1, 7)), decreasing = TRUE)[1:6]
+
+# Uhrzeiten mit den meisten Ausreißern
+sort(table(ausreisser_e10$time), decreasing = TRUE)[1:8]
+sort(table(ausreisser_diesel$time), decreasing = TRUE)[1:8]
+
+# Marken mit den meisten Ausreißern
+sort(table(ausreisser_e10$brand), decreasing = TRUE)[1:8]
+sort(table(ausreisser_diesel$brand), decreasing = TRUE)[1:8]
+```
+
+```{r aufgabe_3b_extreme_werte}
+auswahl_spalten <- c("date", "time", "name", "brand", "street",
+                     "house_number", "post_code", "e10_median",
+                     "diesel_median")
+
+# Größte E10-Ausreißer
+head(ausreisser_e10[order(-ausreisser_e10$e10_median),
+                    auswahl_spalten], 12)
+
+# Kleinste E10-Ausreißer
+head(ausreisser_e10[order(ausreisser_e10$e10_median),
+                    auswahl_spalten], 8)
+
+# Größte Diesel-Ausreißer
+head(ausreisser_diesel[order(-ausreisser_diesel$diesel_median),
+                       auswahl_spalten], 12)
+
+# Kleinste Diesel-Ausreißer
+head(ausreisser_diesel[order(ausreisser_diesel$diesel_median),
+                       auswahl_spalten], 12)
+```
+
+Die Ausreißer treten nicht zufällig verteilt auf. Viele E10-Ausreißer liegen im Februar 2025 und Januar 2026, viele Diesel-Ausreißer besonders im Januar 2026. Bei den Uhrzeiten häufen sich die Ausreißer morgens, vor allem um 06:00, 07:00, 08:00 und 09:00 Uhr. Das passt zu typischen Tagesmustern bei Kraftstoffpreisen: morgens sind Preise oft hoch und sinken im Tagesverlauf.
+
+Ein Teil der Ausreißer sind deshalb vermutlich echte Werte. Werte knapp über der oberen Ausreißergrenze, zum Beispiel um 1814 oder 1849, sind im Vergleich zum restlichen Datensatz zwar hoch, aber als Kraftstoffpreise noch plausibel. Anders sieht es bei den extremsten Fällen aus: Ein Dieselpreis von 0 ist kein echter Preis und muss als falscher Wert betrachtet werden. Auch die Beobachtung mit E10 = 2669 und Diesel = 2619 am 21.02.2025 um 17:00 Uhr ist sehr wahrscheinlich fehlerhaft, weil die Preise derselben Tankstelle in den Stunden davor und danach deutlich niedriger sind. Solche Werte sollten vor weiterführenden Analysen geprüft oder ersetzt werden.
+
+**c. Berechnen Sie die mittlere absolute Abweichung vom arithmetischen Mittel und die Standardabweichung von `e10_median` und `diesel_median` und vergleichen die Werte.**
+
+Die mittlere absolute Abweichung berechnen wir hier als durchschnittlichen absoluten Abstand aller Werte vom arithmetischen Mittel. Die Standardabweichung misst ebenfalls Streuung, gewichtet große Abweichungen wegen des Quadrierens aber stärker.
+
+```{r aufgabe_3c_streuungsmasse}
+mittlere_absolute_abweichung <- function(x) {
+  x <- x[!is.na(x)]
+  mean(abs(x - mean(x)))
+}
+
+streuung_preise <- data.frame(
+  Merkmal = c("E10", "Diesel"),
+  Mittlere_absolute_Abweichung = c(
+    mittlere_absolute_abweichung(tankerkoenig$e10_median),
+    mittlere_absolute_abweichung(tankerkoenig$diesel_median)
+  ),
+  Standardabweichung = c(
+    sd(tankerkoenig$e10_median, na.rm = TRUE),
+    sd(tankerkoenig$diesel_median, na.rm = TRUE)
+  )
+)
+
+streuung_preise
+```
+
+Diesel streut nach beiden Kennzahlen etwas stärker als E10. Die mittlere absolute Abweichung liegt bei Diesel über der von E10, und auch die Standardabweichung ist bei Diesel größer. Der Unterschied zwischen mittlerer absoluter Abweichung und Standardabweichung zeigt außerdem, dass extreme Werte einen spürbaren Einfluss haben. Das ist besonders bei Diesel wichtig, weil dort der falsche Wert 0 und mehrere sehr hohe Morgenpreise die Standardabweichung stärker erhöhen.
+
+
+
+## Woche 4 -- 26.05.2026
+
+**a. Wochentag-Spalte und Boxplots nach Wochentag**
+
+Um den Wochentag zu bestimmen, nutzen wir `format(as.Date(...), "%u")` statt `weekdays()`, weil letzteres je nach Systemsprache englische oder deutsche Namen liefert und das auf anderen Rechnern zu Fehlern führen kann. `%u` gibt immer eine Zahl zurück (1 = Montag, 7 = Sonntag), und wir weisen die deutschen Namen dann selbst zu. Danach machen wir die Spalte zu einem geordneten Faktor, damit die Boxplots von Montag bis Sonntag sortiert erscheinen.
+
+```{r aufgabe_4a_wochentag}
+# Wochentag locale-unabhaengig ueber ISO-Nummer ableiten:
+# %u liefert 1 (Montag) bis 7 (Sonntag) - unabhaengig von der Systemsprache
+wt_nummer <- as.integer(format(as.Date(tankerkoenig$date), "%u"))
+
+# Deutsche Bezeichnungen manuell zuweisen
+wochentag_reihenfolge <- c("Montag", "Dienstag", "Mittwoch",
+                            "Donnerstag", "Freitag", "Samstag", "Sonntag")
+tankerkoenig$wochentag <- factor(wochentag_reihenfolge[wt_nummer],
+                                  levels = wochentag_reihenfolge,
+                                  ordered = TRUE)
+
+# Ueberpruefung: erste Zeilen mit neuem Merkmal
+head(tankerkoenig[, c("date", "wochentag", "e10_median", "diesel_median")])
+```
+
+Die sieben Boxplots für E10 und Diesel zeichnen wir jeweils nebeneinander. Mit `par(mfrow = c(1,2))` kommen beide Plots in eine Zeile, `outline = FALSE` blendet Ausreißer aus, damit die Boxen selbst besser lesbar sind.
+
+```{r aufgabe_4a_boxplots_wochentag, fig.width=12, fig.height=5}
+# Kurzbezeichnungen für die x-Achse
+wt_kurz <- c("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+
+par(mfrow = c(1, 2))   # zwei Plots nebeneinander
+
+boxplot(e10_median ~ wochentag, data = tankerkoenig,
+        main = "E10-Medianpreis nach Wochentag",
+        xlab = "Wochentag", ylab = "Medianpreis (Tausendstel Euro)",
+        col = "lightblue", names = wt_kurz,
+        outline = FALSE)   # Ausreißer ausblenden für bessere Übersicht
+
+boxplot(diesel_median ~ wochentag, data = tankerkoenig,
+        main = "Diesel-Medianpreis nach Wochentag",
+        xlab = "Wochentag", ylab = "Medianpreis (Tausendstel Euro)",
+        col = "lightgray", names = wt_kurz,
+        outline = FALSE)
+
+par(mfrow = c(1, 1))
+```
+
+```{r aufgabe_4a_differenzen_wochentag}
+# Absolute Preisunterschiede zwischen Wochentagen messen
+wt_stats_e10 <- tapply(tankerkoenig$e10_median, tankerkoenig$wochentag, median, na.rm = TRUE)
+wt_stats_diesel <- tapply(tankerkoenig$diesel_median, tankerkoenig$wochentag, median, na.rm = TRUE)
+
+wt_vergleich <- data.frame(
+  Wochentag = wochentag_reihenfolge,
+  E10_Median = round(wt_stats_e10, 1),
+  Diesel_Median = round(wt_stats_diesel, 1)
+)
+wt_vergleich$E10_Diff_zum_Mo   <- round(wt_vergleich$E10_Median - wt_vergleich$E10_Median[1], 1)
+wt_vergleich$Diesel_Diff_zum_Mo <- round(wt_vergleich$Diesel_Median - wt_vergleich$Diesel_Median[1], 1)
+wt_vergleich
+```
+
+Die Boxplots zeigen kaum Unterschiede zwischen den Wochentagen. Am Wochenende sind die Preise bei beiden Kraftstoffen leicht höher, gegen Ende der Arbeitswoche eher etwas günstiger – der Effekt ist aber klein. Die Differenz zwischen dem teuersten und günstigsten Wochentag liegt für E10 wie für Diesel im einstelligen Bereich (Tausendstel Euro), was im Vergleich zu Uhrzeit oder Marke kaum ins Gewicht fällt. Auffällig ist, dass sich E10 und Diesel im Wochenverlauf sehr ähnlich verhalten.
+
+---
+
+**b. Boxplots nach Uhrzeit**
+
+Für die Uhrzeit-Analyse nehmen wir `time` direkt aus dem Datensatz. Wir wandeln die Spalte in einen geordneten Faktor um, damit die 24 Boxplots in der richtigen zeitlichen Reihenfolge stehen.
+
+```{r aufgabe_4b_boxplots_uhrzeit, fig.width=14, fig.height=5}
+# time als geordneten Faktor definieren
+uhrzeiten <- sort(unique(tankerkoenig$time))
+tankerkoenig$time_f <- factor(tankerkoenig$time, levels = uhrzeiten, ordered = TRUE)
+
+par(mfrow = c(1, 2))
+
+boxplot(e10_median ~ time_f, data = tankerkoenig,
+        main = "E10-Medianpreis nach Uhrzeit",
+        xlab = "Uhrzeit", ylab = "Medianpreis (Tausendstel Euro)",
+        col = "lightblue", las = 2, cex.axis = 0.7,
+        outline = FALSE)
+
+boxplot(diesel_median ~ time_f, data = tankerkoenig,
+        main = "Diesel-Medianpreis nach Uhrzeit",
+        xlab = "Uhrzeit", ylab = "Medianpreis (Tausendstel Euro)",
+        col = "lightgray", las = 2, cex.axis = 0.7,
+        outline = FALSE)
+
+par(mfrow = c(1, 1))
+```
+
+```{r aufgabe_4b_differenzen_uhrzeit}
+# Mediane pro Stunde für beide Kraftstoffe
+uh_stats_e10   <- tapply(tankerkoenig$e10_median, tankerkoenig$time_f, median, na.rm = TRUE)
+uh_stats_diesel <- tapply(tankerkoenig$diesel_median, tankerkoenig$time_f, median, na.rm = TRUE)
+
+uh_vergleich <- data.frame(
+  Uhrzeit = uhrzeiten,
+  E10_Median = round(uh_stats_e10, 1),
+  Diesel_Median = round(uh_stats_diesel, 1)
+)
+
+# Spanne (Maximum - Minimum) als Maß für den täglichen Schwankungsbereich
+cat("E10   – Spanne über den Tag (Max–Min der stündl. Mediane):",
+    round(max(uh_stats_e10, na.rm=TRUE) - min(uh_stats_e10, na.rm=TRUE), 1), "\n")
+cat("Diesel – Spanne über den Tag (Max–Min der stündl. Mediane):",
+    round(max(uh_stats_diesel, na.rm=TRUE) - min(uh_stats_diesel, na.rm=TRUE), 1), "\n")
+
+uh_vergleich
+```
+
+Hier ist das Muster deutlich zu erkennen: Morgens zwischen ca. 05:00 und 10:00 Uhr sind die Preise am höchsten, am frühen Nachmittag am niedrigsten, abends ziehen sie wieder leicht an. Dieses Muster zeigt sich bei E10 und Diesel gleich. Die Spanne zwischen der teuersten und günstigsten Tageszeit ist dabei deutlich größer als beim Wochentag – wer morgens tankt, zahlt also spürbar mehr als mittags.
+
+---
+
+**c. Boxplots nach Marke**
+
+Zuletzt schauen wir uns die Preise nach Marke an. Weil es viele verschiedene Marken gibt, sortieren wir sie nach ihrem E10-Median und drehen die Achsenbeschriftung, damit alles lesbar bleibt.
+
+```{r aufgabe_4c_boxplots_marken, fig.width=14, fig.height=6}
+# Marken nach medianem E10-Preis sortieren für bessere Lesbarkeit
+marken_mediane_e10 <- tapply(tankerkoenig$e10_median, tankerkoenig$brand, median, na.rm = TRUE)
+marken_order <- names(sort(marken_mediane_e10))
+
+tankerkoenig$brand_f <- factor(tankerkoenig$brand, levels = marken_order)
+
+par(mfrow = c(1, 2))
+
+boxplot(e10_median ~ brand_f, data = tankerkoenig,
+        main = "E10-Medianpreis nach Marke",
+        xlab = "", ylab = "Medianpreis (Tausendstel Euro)",
+        col = "lightblue", las = 2, cex.axis = 0.65,
+        outline = FALSE)
+
+boxplot(diesel_median ~ brand_f, data = tankerkoenig,
+        main = "Diesel-Medianpreis nach Marke",
+        xlab = "", ylab = "Medianpreis (Tausendstel Euro)",
+        col = "lightgray", las = 2, cex.axis = 0.65,
+        outline = FALSE)
+
+par(mfrow = c(1, 1))
+```
+
+```{r aufgabe_4c_differenzen_marken}
+# Mediane pro Marke
+mk_stats_e10    <- sort(tapply(tankerkoenig$e10_median, tankerkoenig$brand, median, na.rm = TRUE))
+mk_stats_diesel <- tapply(tankerkoenig$diesel_median, tankerkoenig$brand, median, na.rm = TRUE)
+mk_stats_diesel <- mk_stats_diesel[names(mk_stats_e10)]  # gleiche Reihenfolge
+
+mk_vergleich <- data.frame(
+  Marke = names(mk_stats_e10),
+  E10_Median = round(mk_stats_e10, 1),
+  Diesel_Median = round(mk_stats_diesel, 1)
+)
+
+cat("E10   – Spanne über Marken (teuerste − günstigste):",
+    round(max(mk_stats_e10, na.rm=TRUE) - min(mk_stats_e10, na.rm=TRUE), 1), "\n")
+cat("Diesel – Spanne über Marken (teuerste − günstigste):",
+    round(max(mk_stats_diesel, na.rm=TRUE) - min(mk_stats_diesel, na.rm=TRUE), 1), "\n")
+
+mk_vergleich
+```
+
+Die Unterschiede zwischen den Marken sind gut sichtbar. Große Markentankstellen wie Aral oder Shell verlangen tendenziell mehr, während JET und freie Tankstellen günstiger sind. Die Spanne zwischen der günstigsten und teuersten Marke ist bei beiden Kraftstoffen größer als die Schwankungen über die Wochentage.
+
+---
+
+**d. Stärkster Einflussfaktor auf die Kraftstoffpreise**
+
+Um die drei Merkmale direkt vergleichen zu können, fassen wir die jeweiligen Spannen der Gruppen-Mediane in einer Tabelle zusammen.
+
+```{r aufgabe_4d_vergleich_spannen}
+# Zusammenfassung der Spannen aller drei Merkmale
+spanne_e10_wt     <- round(max(wt_stats_e10, na.rm=TRUE) - min(wt_stats_e10, na.rm=TRUE), 1)
+spanne_e10_uh     <- round(max(uh_stats_e10, na.rm=TRUE) - min(uh_stats_e10, na.rm=TRUE), 1)
+spanne_e10_mk     <- round(max(mk_stats_e10, na.rm=TRUE) - min(mk_stats_e10, na.rm=TRUE), 1)
+
+spanne_diesel_wt  <- round(max(wt_stats_diesel, na.rm=TRUE) - min(wt_stats_diesel, na.rm=TRUE), 1)
+spanne_diesel_uh  <- round(max(uh_stats_diesel, na.rm=TRUE) - min(uh_stats_diesel, na.rm=TRUE), 1)
+spanne_diesel_mk  <- round(max(mk_stats_diesel, na.rm=TRUE) - min(mk_stats_diesel, na.rm=TRUE), 1)
+
+vergleich_einfluss <- data.frame(
+  Merkmal    = c("Wochentag", "Uhrzeit", "Marke"),
+  E10_Spanne   = c(spanne_e10_wt, spanne_e10_uh, spanne_e10_mk),
+  Diesel_Spanne = c(spanne_diesel_wt, spanne_diesel_uh, spanne_diesel_mk)
+)
+vergleich_einfluss
+```
+
+Den größten Einfluss auf die Kraftstoffpreise hat die **Uhrzeit**. Die Spanne der stündlichen Mediane ist bei E10 wie bei Diesel am größten und deutlich höher als bei den anderen beiden Merkmalen. Wer mittags tankt statt morgens, spart messbar – das zeigen die Boxplots sehr klar.
+
+An zweiter Stelle steht die **Marke**. Auch hier sind die Preisunterschiede gut sichtbar und liegen deutlich über den Wochentags-Schwankungen. Je nach Marke kann man also ebenfalls einiges sparen.
+
+Den geringsten Einfluss hat der **Wochentag**. Die Boxplots sehen von Montag bis Sonntag fast gleich aus, und die Spannen-Tabelle bestätigt das: Die Unterschiede zwischen den Tagen sind im Vergleich zu Uhrzeit und Marke vernachlässigbar.
+
+
+
+## Woche 5 -- 02.06.2026
+
+**a. Qualitative Preiskategorien für E10 und Diesel**
+
+Für die Einteilung nutzen wir `quantile(..., seq(0, 1, 0.2))`, das uns sechs Grenzwerte liefert, die den Wertebereich in fünf Abschnitte aufteilen. Bei `e10_median` gibt es fehlende Werte, daher `na.rm = TRUE`. Die eigentliche Zuweisung läuft über `cut()` mit `include.lowest = TRUE`, sonst fällt der kleinste Wert raus und bekommt `NA` statt einer Kategorie.
+
+```{r aufgabe_5a_qualitativ}
+# Quintilsgrenzen berechnen
+grenzen_e10    <- quantile(tankerkoenig$e10_median,    seq(0, 1, 0.2), na.rm = TRUE)
+grenzen_diesel <- quantile(tankerkoenig$diesel_median, seq(0, 1, 0.2), na.rm = TRUE)
+
+cat("Grenzen E10:\n");    print(grenzen_e10)
+cat("Grenzen Diesel:\n"); print(grenzen_diesel)
+
+# Kategorien in richtiger Reihenfolge
+kategorien <- c("sehr niedrig", "niedrig", "mittel", "hoch", "sehr hoch")
+
+# E10: neue qualitative Spalte
+tankerkoenig$e10_median_qualitativ <- cut(
+  tankerkoenig$e10_median,
+  breaks          = grenzen_e10,
+  labels          = kategorien,
+  include.lowest  = TRUE,
+  ordered_result  = TRUE
+)
+
+# Diesel: neue qualitative Spalte
+tankerkoenig$diesel_median_qualitativ <- cut(
+  tankerkoenig$diesel_median,
+  breaks          = grenzen_diesel,
+  labels          = kategorien,
+  include.lowest  = TRUE,
+  ordered_result  = TRUE
+)
+
+# Ergebnis prüfen
+table(tankerkoenig$e10_median_qualitativ)
+table(tankerkoenig$diesel_median_qualitativ)
+```
+
+Die Häufigkeiten pro Kategorie sollten ungefähr gleich ausfallen, kleine Unterschiede entstehen aber, wenn mehrere Werte exakt auf einer Grenze liegen.
+
+---
+
+**b. Warum ist die Einteilung über Quantile sinnvoll?**
+
+Feste Grenzen von Hand zu wählen ist riskant: Je nachdem wie die Daten verteilt sind, können einzelne Kategorien fast leer bleiben und andere sehr voll. Mit Quintilen passiert das nicht, weil die Grenzen direkt aus den Daten kommen und immer ungefähr gleich viele Werte pro Kategorie garantieren. Man kann dann zum Beispiel sagen, ob eine Tankstelle im oberen oder unteren Fünftel liegt – das macht nur Sinn, wenn alle Kategorien ähnlich besetzt sind.
+
+---
+
+**c. Balkendiagramme der relativen Häufigkeiten**
+
+Die relativen Häufigkeiten holen wir mit `prop.table(table(...))`. Zwei Balkendiagramme nebeneinander machen den direkten Vergleich zwischen E10 und Diesel einfacher.
+
+```{r aufgabe_5c_balken, fig.width=10, fig.height=5}
+haeuf_e10    <- prop.table(table(tankerkoenig$e10_median_qualitativ))
+haeuf_diesel <- prop.table(table(tankerkoenig$diesel_median_qualitativ))
+
+par(mfrow = c(1, 2))
+
+barplot(haeuf_e10,
+        main      = "E10 – relative Häufigkeiten",
+        ylab      = "Relative Häufigkeit",
+        col       = "lightblue",
+        ylim      = c(0, 0.30),
+        las       = 2,
+        cex.names = 0.85)
+
+barplot(haeuf_diesel,
+        main      = "Diesel – relative Häufigkeiten",
+        ylab      = "Relative Häufigkeit",
+        col       = "lightgray",
+        ylim      = c(0, 0.30),
+        las       = 2,
+        cex.names = 0.85)
+
+par(mfrow = c(1, 1))
+```
+
+Die Balken liegen alle bei etwa 20 % – das war so zu erwarten, weil die Grenzen in Aufgabe a genau dafür berechnet wurden. Anders wäre es nur gewesen, wenn man stattdessen feste Eurowerte als Grenzen genommen hätte, die zufällig nicht gut zum Datensatz passen.
+
+---
+
+**d. Mosaikplots: Marke und Preiskategorie**
+
+Im Mosaikplot steht die Breite eines Streifens für die Häufigkeit der jeweiligen Marke im Datensatz, die Farbabschnitte darin zeigen wie sich die Preiskategorien innerhalb dieser Marke aufteilen. So sieht man auf einen Blick, ob eine Marke eher im günstigen oder teuren Bereich landet.
+
+```{r aufgabe_5d_mosaikplot, fig.width=13, fig.height=7}
+par(mfrow = c(1, 2))
+
+mosaicplot(table(tankerkoenig$brand, tankerkoenig$e10_median_qualitativ),
+           main     = "E10: Marke vs. Preiskategorie",
+           xlab     = "Marke",
+           ylab     = "Preiskategorie",
+           col      = c("#cce5ff", "#80bfff", "#3399ff", "#0066cc", "#003d7a"),
+           las      = 2,
+           cex.axis = 0.65)
+
+mosaicplot(table(tankerkoenig$brand, tankerkoenig$diesel_median_qualitativ),
+           main     = "Diesel: Marke vs. Preiskategorie",
+           xlab     = "Marke",
+           ylab     = "Preiskategorie",
+           col      = c("#ebebeb", "#c0c0c0", "#909090", "#606060", "#303030"),
+           las      = 2,
+           cex.axis = 0.65)
+
+par(mfrow = c(1, 1))
+```
+
+Man sieht gut, dass die Preisverteilung je nach Marke sehr unterschiedlich aussieht. Bei Aral oder Shell ist der Anteil von *hoch* und *sehr hoch* merklich größer, bei JET oder freien Tankstellen liegt der Schwerpunkt eher unten. Das passt zu dem, was die Boxplots in Woche 4 schon gezeigt haben.
+
+Interessant ist, dass die Reihenfolge der Marken bei E10 und Diesel nahezu identisch ist. Wer bei einem Kraftstoff teuer ist, ist es beim anderen auch – die Marke scheint also grundsätzlich die Preislage zu bestimmen, unabhängig vom Kraftstofftyp.
+
+
+## Woche 6 -- 09.06.2026
+
+**a. Relative Häufigkeiten von `e10_median_qualitativ = sehr hoch` und `diesel_median_qualitativ = sehr hoch` pro Marke**
+
+Wir berechnen für jede Marke, wie groß der Anteil der Beobachtungen mit der Kategorie *sehr hoch* ist. Dazu teilen wir die absolute Häufigkeit von *sehr hoch* durch die Gesamtzahl der Beobachtungen je Marke. Das Ergebnis stellen wir als Balkendiagramm dar, sortiert nach dem E10-Anteil, damit die Marken vergleichbar sind.
+
+```{r aufgabe_6a_sehr_hoch}
+# Kontingenztabellen: Marke x Preiskategorie
+tab_e10    <- table(tankerkoenig$brand, tankerkoenig$e10_median_qualitativ)
+tab_diesel <- table(tankerkoenig$brand, tankerkoenig$diesel_median_qualitativ)
+
+# Relative Häufigkeiten zeilenweise (= innerhalb jeder Marke)
+rel_e10    <- prop.table(tab_e10,    margin = 1)
+rel_diesel <- prop.table(tab_diesel, margin = 1)
+
+# Anteil "sehr hoch" pro Marke
+sh_e10    <- rel_e10[,    "sehr hoch"]
+sh_diesel <- rel_diesel[, "sehr hoch"]
+
+# Nach E10-Anteil sortieren
+ord <- order(sh_e10)
+sh_e10    <- sh_e10[ord]
+sh_diesel <- sh_diesel[names(sh_e10)]
+
+# Balkendiagramm nebeneinander
+par(mfrow = c(1, 2), mar = c(8, 4, 4, 2))  # mar vergrößert unteren Rand
+
+barplot(sh_e10,
+        main      = "E10: Anteil 'sehr hoch' je Marke",
+        ylab      = "Relativer Anteil",
+        col       = "lightblue",
+        las       = 2,
+        cex.names = 0.7,
+        ylim      = c(0, 0.6))
+mtext("Marke", side = 1, line = 6)  # xlab manuell tiefer setzen
+
+barplot(sh_diesel,
+        main      = "Diesel: Anteil 'sehr hoch' je Marke",
+        ylab      = "Relativer Anteil",
+        col       = "lightgray",
+        las       = 2,
+        cex.names = 0.7,
+        ylim      = c(0, 0.6))
+mtext("Marke", side = 1, line = 6)  # xlab manuell tiefer setzen
+
+par(mfrow = c(1, 1), mar = c(5, 4, 4, 2))  # Ränder zurücksetzen auf Standard
+
+# Zahlenwerte zur Kontrolle
+data.frame(Marke = names(sh_e10),
+           E10_sehr_hoch    = round(sh_e10, 3),
+           Diesel_sehr_hoch = round(sh_diesel, 3))  
+```
+
+Die Balkendiagramme zeigen, dass der Anteil von *sehr hoch* je nach Marke stark schwankt. Markentankstellen wie Aral oder Shell liegen deutlich öfter in der teuersten Kategorie als JET oder freie Tankstellen. Das gilt für E10 und Diesel gleichermaßen, die Rangfolge der Marken ist in beiden Plots sehr ähnlich. Marken, die bei E10 einen hohen Anteil in *sehr hoch* haben, zeigen dieses Muster auch beim Diesel.
+
+---
+
+**b. Relative Häufigkeiten von `e10_median_qualitativ = sehr niedrig` und `diesel_median_qualitativ = sehr niedrig` pro Marke**
+
+Genauso wie in Aufgabe a, nur diesmal für die Kategorie *sehr niedrig*. Wir sortieren wieder nach dem E10-Anteil aufsteigend.
+
+```{r aufgabe_6b_sehr_niedrig}
+# Anteil "sehr niedrig" pro Marke
+sn_e10    <- rel_e10[,    "sehr niedrig"]
+sn_diesel <- rel_diesel[, "sehr niedrig"]
+
+# Nach E10-Anteil sortieren (absteigend, damit günstigste Marke zuerst)
+ord2 <- order(sn_e10, decreasing = TRUE)
+sn_e10    <- sn_e10[ord2]
+sn_diesel <- sn_diesel[names(sn_e10)]
+
+par(mfrow = c(1, 2), mar = c(8, 4, 4, 2))  # mar vergrößert unteren Rand
+
+barplot(sn_e10,
+        main      = "E10: Anteil 'sehr niedrig' je Marke",
+        ylab      = "Relativer Anteil",
+        col       = "lightblue",
+        las       = 2,
+        cex.names = 0.7,
+        ylim      = c(0, 0.6))
+mtext("Marke", side = 1, line = 6)  # xlab manuell tiefer setzen
+
+barplot(sn_diesel,
+        main      = "Diesel: Anteil 'sehr niedrig' je Marke",
+        ylab      = "Relativer Anteil",
+        col       = "lightgray",
+        las       = 2,
+        cex.names = 0.7,
+        ylim      = c(0, 0.6))
+mtext("Marke", side = 1, line = 6)  # xlab manuell tiefer setzen
+
+par(mfrow = c(1, 1), mar = c(5, 4, 4, 2))  # Ränder zurücksetzen auf Standard
+
+data.frame(Marke = names(sn_e10),
+           E10_sehr_niedrig    = round(sn_e10, 3),
+           Diesel_sehr_niedrig = round(sn_diesel, 3))
+```
+
+Das Bild ist das Spiegelbild von Aufgabe a: Die Marken, die selten in *sehr hoch* auftauchen, landen häufig in *sehr niedrig* – also JET und freie Tankstellen. Aral oder Shell dagegen haben hier kaum Beobachtungen. Auch hier ist die Rangfolge bei E10 und Diesel nahezu identisch. Zusammen mit Aufgabe a ergibt sich ein klares Bild: Die Marke bestimmt ziemlich zuverlässig, ob eine Tankstelle eher günstig oder eher teuer ist.
+
+---
+
+**c. Kontingenzmaß für den Zusammenhang von `brand` und Preiskategorie**
+
+Als Kontingenzmaß verwenden wir Cramér's V. Es basiert auf dem Chi-Quadrat-Wert der Kontingenztabelle und ist normiert auf den Bereich [0, 1], wobei 0 für keinen Zusammenhang und 1 für einen perfekten Zusammenhang steht. Das macht es gut vergleichbar, auch wenn die Tabellen unterschiedlich groß sind. Da wir sowohl `brand` (nominal) als auch die Preiskategorien (ordinal, aber als nominal behandelt) vorliegen haben, ist Cramér's V hier passend. `chisq.test()` ist in Base R enthalten, für Cramér's V rechnen wir die Formel selbst nach.
+
+```{r aufgabe_6c_craemer_v}
+# Chi-Quadrat-Tests
+chi_e10    <- chisq.test(tab_e10)
+chi_diesel <- chisq.test(tab_diesel)
+
+# Cramér's V: sqrt( chi^2 / (n * (min(k, r) - 1)) )
+n      <- nrow(tankerkoenig)
+k_e10  <- min(nrow(tab_e10),    ncol(tab_e10))
+k_die  <- min(nrow(tab_diesel), ncol(tab_diesel))
+
+v_e10    <- sqrt(chi_e10$statistic    / (n * (k_e10 - 1)))
+v_diesel <- sqrt(chi_diesel$statistic / (n * (k_die - 1)))
+
+cat("Cramér's V  E10 ~ brand:    ", round(v_e10,    4), "\n")
+cat("Cramér's V  Diesel ~ brand: ", round(v_diesel, 4), "\n")
+```
+
+Cramér's V beträgt für E10 ca. 0.11 und für Diesel ca. 0.08. Diese Werte liegen unter 0.3 und deuten auf einen schwachen, aber vorhandenen Zusammenhang hin. Die Marke hat also einen messbaren, aber nicht sehr starken Einfluss auf die Preiskategorie.
+
+---
+
+**d. Erwartete absolute Häufigkeit von `(brand = SHELL, diesel_median_qualitativ = sehr hoch)` bei Unabhängigkeit**
+
+Im Falle von Unabhängigkeit berechnet sich die erwartete absolute Häufigkeit einer Zelle als:
+
+$$e_{ij} = \frac{n_{i \cdot} \cdot n_{\cdot j}}{n}$$
+
+Dabei ist $n_{i \cdot}$ die Zeilensumme (alle Shell-Beobachtungen), $n_{\cdot j}$ die Spaltensumme (alle Beobachtungen in *sehr hoch*) und $n$ die Gesamtzahl der Beobachtungen.
+
+```{r aufgabe_6d_erwartete_haeufigkeit}
+# Markenname automatisch finden (enthält "shell", Groß-/Kleinschreibung egal)
+shell_name  <- rownames(tab_diesel)[grep("shell", rownames(tab_diesel), 
+                                         ignore.case = TRUE)]
+
+# as.numeric() verhindert den Integer Overflow
+n_shell     <- as.numeric(sum(tab_diesel[shell_name, ]))
+n_sehr_hoch <- as.numeric(sum(tab_diesel[, "sehr hoch"]))
+n_gesamt    <- as.numeric(sum(tab_diesel))
+
+e_shell_sehr_hoch <- (n_shell * n_sehr_hoch) / n_gesamt
+
+cat("Markenname im Datensatz:            ", shell_name, "\n")
+cat("Beobachtungen Shell gesamt:         ", n_shell, "\n")
+cat("Beobachtungen diesel 'sehr hoch':   ", n_sehr_hoch, "\n")
+cat("Gesamtbeobachtungen:                ", n_gesamt, "\n")
+cat("Erwartete Häufigkeit (Unabh.):      ", round(e_shell_sehr_hoch, 2), "\n")
+cat("Tatsächliche Häufigkeit:            ", tab_diesel[shell_name, "sehr hoch"], "\n")
+```
+
+Die erwartete Häufigkeit gibt an, wie oft die Kombination *(SHELL, sehr hoch)* auftreten würde, wenn Marke und Preiskategorie völlig unabhängig voneinander wären – also wenn die Marke nichts über den Preis aussagen würde. Ist die tatsächliche Häufigkeit größer als die erwartete, heißt das, dass Shell öfter in der teuersten Kategorie landet als der Zufall es erklären könnte. Das wäre ein Hinweis darauf, dass Shell systematisch höhere Preise hat. Ist die tatsächliche Häufigkeit kleiner, wäre Shell günstiger als im Mittel erwartet.
+
+## Quellen
+
+[1] Tankerkönig UG, URL: https://tankerkoenig.de, letzter Aufruf: 27.04.2026
+
